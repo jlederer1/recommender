@@ -1,0 +1,4 @@
+.DS_Store #macos conventional project dir
+recommender/ #python venv dir 
+__pycache__/ 
+instance/ #sqllite database dir
