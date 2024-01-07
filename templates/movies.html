@@ -1,4 +1,9 @@
 {% extends "flask_user_layout.html" %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='ratings.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h2>Movies</h2>
@@ -38,12 +43,13 @@
                 
             </div>
               <div class="panel-footer">Rate:
-                  <a href="#" class="card-link">1</a>
-                  <a href="#" class="card-link">2</a>
-                  <a href="#" class="card-link">3</a>
-                  <a href="#" class="card-link">4</a>
-                  <a href="#" class="card-link">5</a> Stars
-              </div>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 1);">1</a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 2);">2</a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 3);">3</a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 4);">4</a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 5);">5</a> Stars
+              </div>    
+
         </div>
     {% endfor %}
 </div>

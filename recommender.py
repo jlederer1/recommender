@@ -1,6 +1,6 @@
 # Contains parts from: https://flask-user.readthedocs.io/en/latest/quickstart_app.html
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_user import login_required, UserManager
 
 from models import db, User, Movie, MovieGenre, Link, Tag, Rating
@@ -81,6 +81,19 @@ def movies_page():
 
     return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, ratings=ratings_by_movie)
 
+@app.route('/submit_ratings', methods=['POST'])
+def submit_ratings():
+    ratings = request.json['ratings']
+    # Add logic to insert ratings into the database
+    for r in ratings: 
+        user_id = r['user_id']
+        movie_id = r['movie_id']
+        score = r['score']
+        rating = Rating(user_id=user_id, movie_id=movie_id, rating=score)
+        db.session.add(rating)
+    db.session.commit() 
+    print("received ratings")
+    return 'Success', 200
 
 # Start development web server
 if __name__ == '__main__':
