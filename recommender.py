@@ -5,6 +5,7 @@ from flask_user import login_required, UserManager
 
 from models import db, User, Movie, MovieGenre, Link, Tag, Rating
 from read_data import check_and_read_data
+from sqlalchemy import text
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -90,8 +91,20 @@ def submit_ratings():
         movie_id = r['movie_id']
         score = r['score']
         rating = Rating(user_id=user_id, movie_id=movie_id, rating=score)
+
+        #query_db = db.session.execute(text(f"SELECT user_id, movie_id, rating FROM movie_ratings WHERE user_id = {user_id} AND movie_id = {movie_id}"))
+        #if False :#len(query_db.all()) == 1:
+        #    print("already exists, so will be deleted and created again")
+        #    db.session.delete(query_db)
+
+        row = Rating.query.filter(Rating.user_id==user_id, Rating.movie_id==movie_id).all()
+        if len(row) > 0:
+            print(row[0])
+            print("already exists, so will be deleted and created again")
+            db.session.delete(row[0])
         db.session.add(rating)
-    db.session.commit() 
+
+    db.session.commit()
     print("received ratings")
     return 'Success', 200
 
