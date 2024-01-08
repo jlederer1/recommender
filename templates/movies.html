@@ -2,6 +2,13 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='ratings.js') }}"></script>
+
+<style>
+    .checked {
+      color: orange;
+    }
+</style>
+
 {% endblock %}
 
 {% block content %}
@@ -43,11 +50,13 @@
                 
             </div>
               <div class="panel-footer">Rate:
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 1);">1</a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 2);">2</a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 3);">3</a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 4);">4</a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 5);">5</a> Stars
+                
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 1, this.id);" id='{{ m.id }}_1'><span class="fa fa-star"></span></span></a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 2, this.id);" id='{{ m.id }}_2'><span class="fa fa-star"></span></span></a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 3, this.id);" id='{{ m.id }}_3'><span class="fa fa-star"></span></span></a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 4, this.id);" id='{{ m.id }}_4'><span class="fa fa-star"></span></span></a>
+                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 5, this.id);" id='{{ m.id }}_5'><span class="fa fa-star"></span></span></a>
+                   Stars
               </div>    
 
         </div>
