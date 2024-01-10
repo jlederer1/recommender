@@ -13,8 +13,6 @@ function addRating(user_id, movie_id, score, elem_id) {
 
     //document.getElementById('element_${score}').classList.add('checked');
     console.log(elem_id);
-    document.getElementById(`${elem_id}`).classList.add('checked');
-
     for (let i = 1; i <= 5; i++) {
         if (i <= score) {
             document.getElementById(`${movie_id}_${i}`).classList.add('checked');
@@ -22,6 +20,5 @@ function addRating(user_id, movie_id, score, elem_id) {
         else {
             document.getElementById(`${movie_id}_${i}`).classList.remove('checked');
         }
-       
       }
 }

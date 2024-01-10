@@ -1,11 +1,12 @@
 # Contains parts from: https://flask-user.readthedocs.io/en/latest/quickstart_app.html
 
-from flask import Flask, render_template, request
-from flask_user import login_required, UserManager
+from flask import Flask, render_template, request, session
+from flask_user import login_required, UserManager, current_user 
 
 from models import db, User, Movie, MovieGenre, Link, Tag, Rating
 from read_data import check_and_read_data
 from sqlalchemy import text
+import math
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -42,6 +43,7 @@ def initdb_command():
         check_and_read_data(db)
     print('Initialized the database.')
 
+
 # The Home page is accessible to anyone
 @app.route('/')
 def home_page():
@@ -75,12 +77,51 @@ def movies_page():
     for tag in tag_list:
         tags.setdefault(tag.movie_id, []).append(tag)
     
-    ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
-    ratings_by_movie = {}
-    for rating in ratings:
-        ratings_by_movie.setdefault(rating.movie_id, []).append(rating)
+    if current_user.is_authenticated:
+        print("Loading user-specific ratings for movies")
+        user_id = current_user.id
+        
+        ### Fetch ratings made by the current user for these movies
+        user_ratings = Rating.query.filter(
+        Rating.user_id == user_id,
+        Rating.movie_id.in_(movie_ids)
+        ).all()
+        user_ratings_dict = {}
+        for rating in user_ratings:
+            user_ratings_dict.setdefault(rating.movie_id, []).append(rating)
+        
+        ### Fetch all ratings for movies calculate averages
+        ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
+        all_ratings_dict = {}
+        for rating in ratings:
+            all_ratings_dict.setdefault(rating.movie_id, []).append(rating)
+        
+        averages_dict = {}
+        for m in movie_ids: 
+            if m in all_ratings_dict.keys():
+                scores = [r.rating for r in all_ratings_dict[m]]
+                averages_dict[m] = math.ceil(sum(scores)/len(scores))
+            else:
+                averages_dict[m] = 0
+    else:
+        print("Loading all ratings for movies")
+        user_ratings_dict = {}
+        
+        ### Fetch all ratings for movies calculate averages
+        ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
+        all_ratings_dict = {}
+        for rating in ratings:
+            all_ratings_dict.setdefault(rating.movie_id, []).append(rating)
+        
+        averages_dict = {}
+        for m in movie_ids: 
+            if m in all_ratings_dict.keys():
+                scores = [r.rating for r in all_ratings_dict[m]]
+                averages_dict[m] = math.ceil(sum(scores)/len(scores))
+            else:
+                averages_dict[m] = 0
 
-    return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, ratings=ratings_by_movie)
+    return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict)
 
 @app.route('/submit_ratings', methods=['POST'])
 def submit_ratings():

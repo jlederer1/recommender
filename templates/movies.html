@@ -5,7 +5,20 @@
 
 <style>
     .checked {
-      color: orange;
+        color: orange; 
+    }
+    .checked_average {
+        color: orange; 
+        border-bottom: 2px solid gold;
+    }
+    .average {  
+        border-bottom: 2px solid gold;
+    }
+    .fa-star:focus {
+        outline: none;        /* Removes the default focus properties*/
+        color: orange;          
+        background: none;     
+        text-shadow: none;    
     }
 </style>
 
@@ -38,27 +51,25 @@
                         {% endfor %}
                     </p>
                 {% endif %}
-                <!-- Display ratings -->
-                {% if ratings.get(m.id) %}
-                    <p>Ratings:</p>
-                    <ul>
-                        {% for rating in ratings[m.id] %}
-                            <li>User {{ rating.user.first_name }}: {{ rating.rating }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                
-            </div>
-              <div class="panel-footer">Rate:
-                
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 1, this.id);" id='{{ m.id }}_1'><span class="fa fa-star"></span></span></a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 2, this.id);" id='{{ m.id }}_2'><span class="fa fa-star"></span></span></a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 3, this.id);" id='{{ m.id }}_3'><span class="fa fa-star"></span></span></a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 4, this.id);" id='{{ m.id }}_4'><span class="fa fa-star"></span></span></a>
-                  <a href="#" onclick="event.preventDefault(); addRating({{current_user.id}}, {{ m.id }}, 5, this.id);" id='{{ m.id }}_5'><span class="fa fa-star"></span></span></a>
-                   Stars
-              </div>    
 
+                <!-- Display stars based on average rating -->
+                <div class="panel-footer">Rate:
+                    {% for i in range(1, 6) %}
+                        <a href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                            <span class="fa fa-star 
+                                {% if user_rating.get(m.id) and user_rating[m.id][0].rating >= i and average_rating[m.id] == i %}
+                                    checked_average
+                                {% elif user_rating.get(m.id) and user_rating[m.id][0].rating >= i %}
+                                    checked
+                                {% elif average_rating[m.id] == i %}
+                                    average
+                                {% endif %}">
+                            </span> 
+                        </a>
+                    {% endfor %}
+                    Stars
+                </div>    
+            </div>
         </div>
     {% endfor %}
 </div>
