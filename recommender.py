@@ -58,15 +58,18 @@ def load_all_ratings(movie_ids):
     for rating in ratings:
         all_ratings_dict.setdefault(rating.movie_id, []).append(rating)
     
+    counts = {}
     averages_dict = {}
     for m in movie_ids: 
         if m in all_ratings_dict.keys():
             scores = [r.rating for r in all_ratings_dict[m]]
             averages_dict[m] = math.ceil(sum(scores)/len(scores))
+            counts[m] = len(scores)
         else:
             averages_dict[m] = 0
+            counts[m] = 0
     
-    return averages_dict
+    return averages_dict, counts
 
 def load_user_ratings(movie_ids, user_id): 
     ### Fetch ratings made by the current user for these movies
@@ -110,11 +113,11 @@ def movies_page():
         print("Loading user-specific ratings for movies")
         user_id = current_user.id
         user_ratings_dict = load_user_ratings(movie_ids, user_id)
-        averages_dict = load_all_ratings(movie_ids)
+        averages_dict, _ = load_all_ratings(movie_ids)
     else:
         print("Loading all ratings for movies")
         user_ratings_dict = {}
-        averages_dict = averages_dict = load_all_ratings(movie_ids)
+        averages_dict, _ = load_all_ratings(movie_ids)
 
     return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict)
 
@@ -151,11 +154,11 @@ def custom_user_profile():
     movie_ids = [m.id for m in movies]
     user_id = current_user.id
     user_ratings_dict = load_user_ratings(movie_ids, user_id)
-    averages_dict = load_all_ratings(movie_ids)
+    averages_dict, counts = load_all_ratings(movie_ids)
     
     form = EditUserProfileForm()
     
-    return render_template('custom_user_profile.html', movies=movies, user_rating=user_ratings_dict, average_rating=averages_dict, form=form)
+    return render_template('custom_user_profile.html', movies=movies, user_rating=user_ratings_dict, average_rating=averages_dict, form=form, counts=counts)
 
 
 # Start development web server

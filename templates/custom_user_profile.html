@@ -22,8 +22,16 @@
             border-collapse: collapse;
         }
         td {
-            padding: 5px;
+            padding: 3px;
+            padding-right: 2px;
             vertical-align: middle;
+        }
+        .rating-count {
+            text-align: right;
+            padding: 0px;
+        }
+        .generate-button {
+            margin-top: 40px; /* Adjust the value as needed */
         }
 
     </style>
@@ -51,10 +59,12 @@
                         </span> 
                     {% endfor %}
                 </td>
+                <!-- Display number of ratings -->
+                <td class="rating-count">({{ counts[movie.id] }})</td>
             </tr>
         {% endfor %}
         </table>
         <!-- Button for generating recommendations -->
-        <button type="button" class="btn btn-primary" disabled>Generate Recommendations</button>
+        <button type="button" class="btn btn-primary generate-button" disabled>Generate Recommendations</button>
     </div>
 {% endblock %}
