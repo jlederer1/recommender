@@ -1,0 +1,60 @@
+{% extends 'flask_user/edit_user_profile.html' %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='ratings.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .checked {
+            color: orange; 
+        }
+        .checked_average {
+            color: orange; 
+            border-bottom: 2px solid gold;
+        }
+        .average {  
+            border-bottom: 2px solid gold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        td {
+            padding: 5px;
+            vertical-align: middle;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    {{ super() }}  <!-- This includes the content from the parent template's 'content' block -->
+    <div>
+        <h3>User Ratings</h3>
+        <table>
+            {% for movie in movies %}
+            <tr>
+                <td>{{ movie.title }}</td>
+                <td>
+                    {% for i in range(1, 6) %}
+                        <a href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ movie.id }}, {{ i }}, this.id);" id='{{ movie.id }}_{{ i }}'>  
+                        <span class="fa fa-star 
+                            {% if user_rating.get(movie.id) and user_rating[movie.id][0].rating >= i and average_rating[movie.id] == i %}
+                                checked_average
+                            {% elif user_rating.get(movie.id) and user_rating[movie.id][0].rating >= i %}
+                                checked
+                            {% elif average_rating[movie.id] == i %}
+                                average
+                            {% endif %}">
+                        </span> 
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+        <!-- Button for generating recommendations -->
+        <button type="button" class="btn btn-primary" disabled>Generate Recommendations</button>
+    </div>
+{% endblock %}

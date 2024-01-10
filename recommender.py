@@ -2,6 +2,7 @@
 
 from flask import Flask, render_template, request, session
 from flask_user import login_required, UserManager, current_user 
+from flask_user.forms import EditUserProfileForm
 
 from models import db, User, Movie, MovieGenre, Link, Tag, Rating
 from read_data import check_and_read_data
@@ -50,6 +51,34 @@ def home_page():
     # render home.html template
     return render_template("home.html")
 
+def load_all_ratings(movie_ids): 
+    ### Fetch all ratings for movies calculate averages
+    ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
+    all_ratings_dict = {}
+    for rating in ratings:
+        all_ratings_dict.setdefault(rating.movie_id, []).append(rating)
+    
+    averages_dict = {}
+    for m in movie_ids: 
+        if m in all_ratings_dict.keys():
+            scores = [r.rating for r in all_ratings_dict[m]]
+            averages_dict[m] = math.ceil(sum(scores)/len(scores))
+        else:
+            averages_dict[m] = 0
+    
+    return averages_dict
+
+def load_user_ratings(movie_ids, user_id): 
+    ### Fetch ratings made by the current user for these movies
+    user_ratings = Rating.query.filter(
+        Rating.user_id == user_id,
+        Rating.movie_id.in_(movie_ids)
+    ).all()
+    user_ratings_dict = {}
+    for rating in user_ratings:
+        user_ratings_dict.setdefault(rating.movie_id, []).append(rating)
+    
+    return user_ratings_dict
 
 # The Members page is only accessible to authenticated users via the @login_required decorator
 @app.route('/movies')
@@ -80,46 +109,12 @@ def movies_page():
     if current_user.is_authenticated:
         print("Loading user-specific ratings for movies")
         user_id = current_user.id
-        
-        ### Fetch ratings made by the current user for these movies
-        user_ratings = Rating.query.filter(
-        Rating.user_id == user_id,
-        Rating.movie_id.in_(movie_ids)
-        ).all()
-        user_ratings_dict = {}
-        for rating in user_ratings:
-            user_ratings_dict.setdefault(rating.movie_id, []).append(rating)
-        
-        ### Fetch all ratings for movies calculate averages
-        ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
-        all_ratings_dict = {}
-        for rating in ratings:
-            all_ratings_dict.setdefault(rating.movie_id, []).append(rating)
-        
-        averages_dict = {}
-        for m in movie_ids: 
-            if m in all_ratings_dict.keys():
-                scores = [r.rating for r in all_ratings_dict[m]]
-                averages_dict[m] = math.ceil(sum(scores)/len(scores))
-            else:
-                averages_dict[m] = 0
+        user_ratings_dict = load_user_ratings(movie_ids, user_id)
+        averages_dict = load_all_ratings(movie_ids)
     else:
         print("Loading all ratings for movies")
         user_ratings_dict = {}
-        
-        ### Fetch all ratings for movies calculate averages
-        ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
-        all_ratings_dict = {}
-        for rating in ratings:
-            all_ratings_dict.setdefault(rating.movie_id, []).append(rating)
-        
-        averages_dict = {}
-        for m in movie_ids: 
-            if m in all_ratings_dict.keys():
-                scores = [r.rating for r in all_ratings_dict[m]]
-                averages_dict[m] = math.ceil(sum(scores)/len(scores))
-            else:
-                averages_dict[m] = 0
+        averages_dict = averages_dict = load_all_ratings(movie_ids)
 
     return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict)
 
@@ -148,6 +143,20 @@ def submit_ratings():
     db.session.commit()
     print("received ratings")
     return 'Success', 200
+
+@app.route('/custom-user-profile')
+def custom_user_profile():
+    movies = Movie.query.limit(10).all()
+    
+    movie_ids = [m.id for m in movies]
+    user_id = current_user.id
+    user_ratings_dict = load_user_ratings(movie_ids, user_id)
+    averages_dict = load_all_ratings(movie_ids)
+    
+    form = EditUserProfileForm()
+    
+    return render_template('custom_user_profile.html', movies=movies, user_rating=user_ratings_dict, average_rating=averages_dict, form=form)
+
 
 # Start development web server
 if __name__ == '__main__':
