@@ -22,11 +22,33 @@
         background: none;     
         text-shadow: none;    
     }
+
+    .center {
+        text-align: center;
+    }
+
 </style>
 
 {% endblock %}
 
 {% block content %}
+
+
+<div class="container">
+    
+    <div class="center">
+        <form class="navbar-form navbar-left" role="search" action="{{ url_for('movies_page') }}" method="get">
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Search" name="q" value="{{ request.args.get('q', '') }}">
+            </div>
+            <div class="checkbox">
+                <label><input type="checkbox" name="order_by_rating"> : Order by rating</label>
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+    </div>
+</div>
+
 <div class="container">
     <h2>Movies</h2>
 
@@ -53,20 +75,40 @@
                         {% endfor %}
                     </p>
                 {% endif %}
+                
+                {% if average_rating.get(m.id) %}
+                    <p>Average Rating:
+                        <span>{{ average_rating[m.id] }}</span>          
+                    </p>
+                {% endif %}
+                
+                {% if votes.get(m.id) %}
+                    <p>Total votes:
+                        <span>{{ votes[m.id] }}</span>          
+                    </p>
+                {% endif %}
+
 
                 <!-- Display stars based on average rating -->
                 <div class="panel-footer">Rate:
                     {% for i in range(1, 6) %}
-                        <a href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, this.id);" id='{{ m.id }}_{{ i }}'>
-                            <span class="fa fa-star 
-                                {% if user_rating.get(m.id) and user_rating[m.id][0].rating >= i and average_rating[m.id] == i %}
-                                    checked_average
-                                {% elif user_rating.get(m.id) and user_rating[m.id][0].rating >= i %}
-                                    checked
-                                {% elif average_rating[m.id] == i %}
-                                    average
-                                {% endif %}">
-                            </span> 
+                        
+                        {% if user_rating.get(m.id) and user_rating[m.id][0].rating >= i and average_rating[m.id] == i %}
+                            <a class="checked_average" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                            
+                        {% elif user_rating.get(m.id) and user_rating[m.id][0].rating >= i %}
+                            <a class="checked" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                                                    
+                        {% elif average_rating[m.id] == i %}
+                            <a class="average" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                                                    
+                        {% else %}
+                            <a class="" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                            
+                        {% endif %}
+                        
+                        <span class="fa fa-star"></span>     
+                        
                         </a>
                     {% endfor %}
                     Stars
@@ -74,6 +116,10 @@
             </div>
         </div>
     {% endfor %}
+</div>
+
+<div class="center">
+    {{ pagination.links }}
 </div>
 
 {% endblock %}
