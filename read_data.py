@@ -1,6 +1,6 @@
 import csv
 from sqlalchemy.exc import IntegrityError
-from models import Movie, MovieGenre, Link, Tag, Rating, User
+from models import Movie, MovieGenre, Link, Tag, Rating, User, Data
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -57,9 +57,9 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " links read")
                 
-                #if count > 1000:
-                #    db.session.rollback()
-                #    break
+                if count > 1000:
+                    db.session.rollback()
+                    break
         
         # read tags from csv
         with open('data/tags.csv', newline='', encoding='utf8') as csvfile:
@@ -86,9 +86,9 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " tags read")
                 
-                #if count > 1000:
-                #    db.session.rollback()
-                #    break
+                if count > 1000:
+                    db.session.rollback()
+                    break
                     
                     
         # read ratings (and corresponding users) from csv
@@ -130,8 +130,31 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " ratings read")
                 
-                #if count > 1000:
-                #    db.session.rollback()
-                #    break
-            
-
+                if count > 1000:
+                    db.session.rollback()
+                    break
+        with open("data/movie_data.csv", newline='', encoding='utf8') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            count = 0
+            for row in reader:
+                if count > 0:
+                    try:
+                        movie_id = row[0]
+                        tmdb_id = row[1]
+                        poster = row[2]
+                        tagline = row[3]
+                        overview = row[4]
+                        data = Data(id=count, movie_id=movie_id, tmdb_id=tmdb_id, poster=poster, tagline=tagline, overview=overview)
+                        db.session.add(data)
+                        db.session.commit()
+                    except IntegrityError:
+                        print("Ignoring duplicate (?)")
+                        db.session.rollback()
+                        pass
+                count += 1
+                if count % 100 == 0:
+                    print(count, " data read")
+                
+                if count > 1000:
+                    db.session.rollback()
+                    break

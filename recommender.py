@@ -6,7 +6,7 @@ from flask_user.forms import EditUserProfileForm
 
 from flask_paginate import Pagination, get_page_args, get_page_parameter
 
-from models import db, User, Movie, MovieGenre, Link, Tag, Rating
+from models import db, User, Movie, MovieGenre, Link, Tag, Rating, Data
 from read_data import check_and_read_data
 from sqlalchemy import func, text
 import math
@@ -151,6 +151,10 @@ def movies_page():
     for tag in tag_list:
         tags.setdefault(tag.movie_id, []).append(tag)
     
+    data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
+    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+
+
     if current_user.is_authenticated:
         print("Loading user-specific ratings for movies")
         user_id = current_user.id
@@ -161,7 +165,7 @@ def movies_page():
         user_ratings_dict = {}
         averages_dict, counts = load_all_ratings(movie_ids)
 
-    return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, pagination=pagination)
+    return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, movie_data=movie_data, pagination=pagination)
 
 @app.route('/submit_ratings', methods=['POST'])
 def submit_ratings():

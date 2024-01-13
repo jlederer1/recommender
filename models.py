@@ -64,4 +64,13 @@ class Rating(db.Model):
     user = db.relationship('User', backref='user_rating')
     movie = db.relationship('Movie', backref='movie_rating')
     
+class Data(db.Model):
+    __tablename__ = 'movie_data_scrape'
+    id = db.Column(db.Integer, primary_key=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
+    tmdb_id = db.Column(db.String(50))
+    poster = db.Column(db.String(255), nullable=False, server_default='')
+    tagline = db.Column(db.String(255), nullable=False, server_default='')
+    overview = db.Column(db.String(255), nullable=False, server_default='')
     
+    movie = db.relationship('Movie', backref='movie_data_scrape')

@@ -4,3 +4,7 @@ flask-user==1.0.2.2
 
 email-validator
 bcrypt==4.0.1
+
+flask-paginate
+bs4
+requests

@@ -54,41 +54,58 @@
 
     {% for m in movies %}
         <div class="panel panel-default">
-            <div class="panel-heading"><b>{{ m.title }}</b></div>
+            <div class="panel-heading"><b>{{ m.title }}</b><p>{% if movie_data.get(m.id) %} - {{ movie_data[m.id].tagline }} {% endif %}</p></div>
             <div class="panel-body">
-                <!-- Display genres -->
-                <p>
-                    {% for g in m.genres %}
-                        <span class="label label-default">{{ g.genre }}</span>
-                    {% endfor %}
-                </p>
-                <!-- Display IMDb and TMDb links if available -->
-                {% if movie_links.get(m.id) %}
-                    <p>IMDb: <a href="https://www.imdb.com/title/tt{{ movie_links[m.id].imdb_id }}" target="_blank">{{ movie_links[m.id].imdb_id }}</a></p>
-                    <p>TMDb: <a href="https://www.themoviedb.org/movie/{{ movie_links[m.id].tmdb_id }}" target="_blank">{{ movie_links[m.id].tmdb_id }}</a></p>
-                {% endif %}
-                <!-- Display tags -->
-                {% if movie_tags.get(m.id) %}
-                    <p>Tags:
-                        {% for tag in movie_tags[m.id] %}
-                            <span>{{ tag.tag_content }}</span>{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
-                {% endif %}
-                
-                {% if average_rating.get(m.id) %}
-                    <p>Average Rating:
-                        <span>{{ average_rating[m.id] }}</span>          
-                    </p>
-                {% endif %}
-                
-                {% if votes.get(m.id) %}
-                    <p>Total votes:
-                        <span>{{ votes[m.id] }}</span>          
-                    </p>
-                {% endif %}
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Display genres -->
+                        <p>
+                            {% for g in m.genres %}
+                                <span class="label label-default">{{ g.genre }}</span>
+                            {% endfor %}
+                        </p>
+                        <!-- Display IMDb and TMDb links if available -->
+                        {% if movie_links.get(m.id) %}
+                            <p><strong>IMDb:</strong> <a href="https://www.imdb.com/title/tt{{ movie_links[m.id].imdb_id }}" target="_blank">{{ movie_links[m.id].imdb_id }}</a></p>
+                            <p><strong>TMDb:</strong> <a href="https://www.themoviedb.org/movie/{{ movie_links[m.id].tmdb_id }}" target="_blank">{{ movie_links[m.id].tmdb_id }}</a></p>
+                        {% endif %}
+                        <!-- Display tags -->
+                        {% if movie_tags.get(m.id) %}
+                            <p><strong>Tags:</strong>
+                                {% for tag in movie_tags[m.id] %}
+                                    <span>{{ tag.tag_content }}</span>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                        
+                        {% if average_rating.get(m.id) %}
+                            <p><strong>Rating:</strong>
+                                <span>{{ average_rating[m.id] }}</span>          
+                            </p>
+                        {% endif %}
+                        
+                        {% if votes.get(m.id) %}
+                            <p><strong>Total votes:</strong>
+                                <span>{{ votes[m.id] }}</span>          
+                            </p>
+                        {% endif %}
 
-
+                        {% if movie_data.get(m.id) %}
+                            <p><strong>Overview:</strong> <br>
+                                <span>
+                                    {{ movie_data[m.id].overview }}
+                                </span>
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        {% if movie_data.get(m.id) %}
+                            <p>
+                                <img src="{{ movie_data[m.id].poster }}" alt="Movie poster" width="200" height="300">
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
                 <!-- Display stars based on average rating -->
                 <div class="panel-footer">Rate:
                     {% for i in range(1, 6) %}
