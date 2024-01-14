@@ -11,6 +11,8 @@ from read_data import check_and_read_data
 from sqlalchemy import func, text
 import math
 
+from create_recommendations import recommend_movies
+
 # Class-based application configuration
 class ConfigClass(object):
     """ Flask application config """
@@ -205,6 +207,47 @@ def custom_user_profile():
     form = EditUserProfileForm()
     
     return render_template('custom_user_profile.html', movies=movies, user_rating=user_ratings_dict, average_rating=averages_dict, form=form, counts=counts)
+
+@app.route('/recommendations')
+@login_required  # User must be authenticated
+def recommendations_page():
+    user_id = current_user.id
+
+    already_rated, predictions = recommend_movies(app, user_id)
+    predictions = predictions["movie_id"]
+    predictions = Movie.query.filter(Movie.id.in_(predictions))#.all()
+
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    per_page = 10
+
+
+    movies = predictions.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = Pagination(page=page, total=movies.total, record_name='movies', per_page=per_page)
+
+
+    movie_ids = [m.id for m in movies]
+    links = Link.query.filter(Link.movie_id.in_(movie_ids)).all()
+    links = {link.movie_id: link for link in links}
+    tag_list = Tag.query.filter(Tag.movie_id.in_(movie_ids)).all()
+    tags = {}
+    for tag in tag_list:
+        tags.setdefault(tag.movie_id, []).append(tag)
+    
+    data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
+    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+
+
+    if current_user.is_authenticated:
+        print("Loading user-specific ratings for movies")
+        user_id = current_user.id
+        user_ratings_dict = load_user_ratings(movie_ids, user_id)
+        averages_dict, counts = load_all_ratings(movie_ids)
+    else:
+        print("Loading all ratings for movies")
+        user_ratings_dict = {}
+        averages_dict, counts = load_all_ratings(movie_ids)
+
+    return render_template("recommendations.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, movie_data=movie_data, pagination=pagination)
 
 
 # Start development web server
