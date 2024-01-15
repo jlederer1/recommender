@@ -47,16 +47,23 @@
                 <td>{{ movie.title }}</td>
                 <td>
                     {% for i in range(1, 6) %}
-                        <a href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ movie.id }}, {{ i }}, this.id);" id='{{ movie.id }}_{{ i }}'>  
-                        <span class="fa fa-star 
-                            {% if user_rating.get(movie.id) and user_rating[movie.id][0].rating >= i and average_rating[movie.id] == i %}
-                                checked_average
-                            {% elif user_rating.get(movie.id) and user_rating[movie.id][0].rating >= i %}
-                                checked
-                            {% elif average_rating[movie.id] == i %}
-                                average
-                            {% endif %}">
-                        </span> 
+
+                        {% if user_rating.get(movie.id) and user_rating[movie.id][0].rating >= i and average_rating[movie.id] == i %}
+                        <a class="checked_average" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ movie.id }}, {{ i }}, {{ average_rating[movie.id] }}, this.id);" id='{{ movie.id }}_{{ i }}'>
+                        
+                        {% elif user_rating.get(movie.id) and user_rating[movie.id][0].rating >= i %}
+                            <a class="checked" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ movie.id }}, {{ i }}, {{ average_rating[movie.id] }}, this.id);" id='{{ movie.id }}_{{ i }}'>
+                                                    
+                        {% elif average_rating[movie.id] == i %}
+                            <a class="average" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ movie.id }}, {{ i }}, {{ average_rating[movie.id] }}, this.id);" id='{{ movie.id }}_{{ i }}'>
+                                                    
+                        {% else %}
+                            <a class="" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ movie.id }}, {{ i }}, {{ average_rating[movie.id] }}, this.id);" id='{{ movie.id }}_{{ i }}'>
+                            
+                        {% endif %}
+                        
+                        <span class="fa fa-star"></span>   
+
                     {% endfor %}
                 </td>
                 <!-- Display number of ratings -->
