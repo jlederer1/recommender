@@ -4,10 +4,14 @@ from flask import Flask, render_template, request, session
 from flask_user import login_required, UserManager, current_user 
 from flask_user.forms import EditUserProfileForm
 
-from models import db, User, Movie, MovieGenre, Link, Tag, Rating
+from flask_paginate import Pagination, get_page_args, get_page_parameter
+
+from models import db, User, Movie, MovieGenre, Link, Tag, Rating, Data
 from read_data import check_and_read_data
-from sqlalchemy import text
+from sqlalchemy import func, text
 import math
+
+from create_recommendations import recommend_movies
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -90,8 +94,48 @@ def movies_page():
     # String-based templates
 
     # first 10 movies
-    movies = Movie.query.limit(10).all()
-    movie_ids = [m.id for m in movies]
+    #movies = Movie.query.limit(10).all()
+    #movie_ids = [m.id for m in movies]
+
+    # use flask_paginate to paginate
+
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    per_page = 10
+
+    search_query = request.args.get('q', '')
+    order_by_rating = 'order_by_rating' in request.args
+
+    #(WR) = (v ÷ (v+m)) × R + (m ÷ (v+m)) × C , where:
+    """
+    query = Movie.query
+    if search_query:
+        query = query.filter(Movie.title.contains(search_query))
+
+    if order_by_rating:
+        C = db.session.query(func.avg(Rating.rating)).scalar()
+        m = 1
+        query = query(Movie, func.count(Rating.id).label('votes')).\
+            join(Rating).\
+            group_by(Movie.id).\
+            having(func.count(Rating.id) >= m).\
+            order_by((func.count(Rating.id) / (func.count(Rating.id) + m) * func.avg(Rating.rating) + (m / (func.count(Rating.id) + m) * C)).desc()).all()
+    """
+    query = Movie.query
+    if order_by_rating:
+        C = db.session.query(func.avg(Rating.rating)).scalar()
+        m = 2
+        subquery = db.session.query(Movie.id, (func.count(Rating.id) / (func.count(Rating.id) + m) * func.avg(Rating.rating) + (m / (func.count(Rating.id) + m) * C)).label('weighted_rating')).\
+            join(Rating).\
+            group_by(Movie.id).\
+            having(func.count(Rating.id) >= m).\
+            subquery()
+        query = db.session.query(Movie).join(subquery, Movie.id == subquery.c.id).order_by(subquery.c.weighted_rating.desc())
+    
+    if search_query:
+            query = query.filter(Movie.title.contains(search_query))
+
+    movies = query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = Pagination(page=page, total=movies.total, record_name='movies', per_page=per_page)
 
     # only Romance movies
     # movies = Movie.query.filter(Movie.genres.any(MovieGenre.genre == 'Romance')).limit(10).all()
@@ -101,7 +145,7 @@ def movies_page():
     #     .filter(Movie.genres.any(MovieGenre.genre == 'Romance')) \
     #     .filter(Movie.genres.any(MovieGenre.genre == 'Horror')) \
     #     .limit(10).all()
-
+    movie_ids = [m.id for m in movies]
     links = Link.query.filter(Link.movie_id.in_(movie_ids)).all()
     links = {link.movie_id: link for link in links}
     tag_list = Tag.query.filter(Tag.movie_id.in_(movie_ids)).all()
@@ -109,17 +153,21 @@ def movies_page():
     for tag in tag_list:
         tags.setdefault(tag.movie_id, []).append(tag)
     
+    data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
+    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+
+
     if current_user.is_authenticated:
         print("Loading user-specific ratings for movies")
         user_id = current_user.id
         user_ratings_dict = load_user_ratings(movie_ids, user_id)
-        averages_dict, _ = load_all_ratings(movie_ids)
+        averages_dict, counts = load_all_ratings(movie_ids)
     else:
         print("Loading all ratings for movies")
         user_ratings_dict = {}
-        averages_dict, _ = load_all_ratings(movie_ids)
+        averages_dict, counts = load_all_ratings(movie_ids)
 
-    return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict)
+    return render_template("movies.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, movie_data=movie_data, pagination=pagination)
 
 @app.route('/submit_ratings', methods=['POST'])
 def submit_ratings():
@@ -159,6 +207,47 @@ def custom_user_profile():
     form = EditUserProfileForm()
     
     return render_template('custom_user_profile.html', movies=movies, user_rating=user_ratings_dict, average_rating=averages_dict, form=form, counts=counts)
+
+@app.route('/recommendations')
+@login_required  # User must be authenticated
+def recommendations_page():
+    user_id = current_user.id
+
+    already_rated, predictions = recommend_movies(app, user_id)
+    predictions = predictions["movie_id"]
+    predictions = Movie.query.filter(Movie.id.in_(predictions))#.all()
+
+    page = request.args.get(get_page_parameter(), type=int, default=1)
+    per_page = 10
+
+
+    movies = predictions.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = Pagination(page=page, total=movies.total, record_name='movies', per_page=per_page)
+
+
+    movie_ids = [m.id for m in movies]
+    links = Link.query.filter(Link.movie_id.in_(movie_ids)).all()
+    links = {link.movie_id: link for link in links}
+    tag_list = Tag.query.filter(Tag.movie_id.in_(movie_ids)).all()
+    tags = {}
+    for tag in tag_list:
+        tags.setdefault(tag.movie_id, []).append(tag)
+    
+    data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
+    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+
+
+    if current_user.is_authenticated:
+        print("Loading user-specific ratings for movies")
+        user_id = current_user.id
+        user_ratings_dict = load_user_ratings(movie_ids, user_id)
+        averages_dict, counts = load_all_ratings(movie_ids)
+    else:
+        print("Loading all ratings for movies")
+        user_ratings_dict = {}
+        averages_dict, counts = load_all_ratings(movie_ids)
+
+    return render_template("recommendations.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, movie_data=movie_data, pagination=pagination)
 
 
 # Start development web server
