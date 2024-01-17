@@ -26,6 +26,16 @@
             padding-right: 2px;
             vertical-align: middle;
         }
+        /* Adjust the width of the first and second columns */
+        td:first-child {
+            width: 50%;  /* Adjust as needed */
+        }
+        td:nth-child(2) {
+            width: 40%;  /* Adjust as needed */
+        }
+        td:nth-child(3) {
+            width: 10%;  /* Adjust as needed */
+        }
         .rating-count {
             text-align: right;
             padding: 0px;
@@ -41,6 +51,11 @@
     {{ super() }}  <!-- This includes the content from the parent template's 'content' block -->
     <div>
         <h3>User Ratings</h3>
+        <div style="height: 300px; /* Adjust as needed */
+                    overflow-y: scroll; 
+                    scrollbar-width: thin; 
+                    scrollbar-color: rebeccapurple orange; /* Adjust scrollbar colors as needed */
+                    width: 100%;">
         <table>
             {% for movie in movies %}
             <tr>
@@ -71,7 +86,11 @@
             </tr>
         {% endfor %}
         </table>
-        <!-- Button for generating recommendations -->
-        <button type="button" class="btn btn-primary generate-button" disabled>Generate Recommendations</button>
-    </div>
+        </div>
+
+    <!-- Button for generating recommendations -->
+    <a href="{{ url_for('recommendations_page') }}">
+        <button type="button" class="btn btn-primary generate-button">Generate Recommendations</button>
+    </a>
+
 {% endblock %}

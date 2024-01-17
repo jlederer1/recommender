@@ -55,7 +55,9 @@ def home_page():
     # render home.html template
     return render_template("home.html")
 
-def load_all_ratings(movie_ids): 
+def load_all_ratings(movie_ids=None): 
+    if not movie_ids:   
+        movie_ids = [m.id for m in Movie.query.all()]
     ### Fetch all ratings for movies calculate averages
     ratings = Rating.query.filter(Rating.movie_id.in_(movie_ids)).all()
     all_ratings_dict = {}
@@ -75,7 +77,9 @@ def load_all_ratings(movie_ids):
     
     return averages_dict, counts
 
-def load_user_ratings(movie_ids, user_id): 
+def load_user_ratings(user_id, movie_ids=None): 
+    if not movie_ids:   
+        movie_ids = [m.id for m in Movie.query.all()]
     ### Fetch ratings made by the current user for these movies
     user_ratings = Rating.query.filter(
         Rating.user_id == user_id,
@@ -160,7 +164,7 @@ def movies_page():
     if current_user.is_authenticated:
         print("Loading user-specific ratings for movies")
         user_id = current_user.id
-        user_ratings_dict = load_user_ratings(movie_ids, user_id)
+        user_ratings_dict = load_user_ratings(user_id, movie_ids)
         averages_dict, counts = load_all_ratings(movie_ids)
     else:
         print("Loading all ratings for movies")
@@ -197,12 +201,14 @@ def submit_ratings():
 
 @app.route('/custom-user-profile')
 def custom_user_profile():
-    movies = Movie.query.limit(10).all()
-    
-    movie_ids = [m.id for m in movies]
     user_id = current_user.id
-    user_ratings_dict = load_user_ratings(movie_ids, user_id)
-    averages_dict, counts = load_all_ratings(movie_ids)
+    user_ratings_dict = load_user_ratings(user_id)
+    averages_dict, counts = load_all_ratings()
+    
+    # movie_ids in user_ratings_dict
+    movie_ids = list(user_ratings_dict.keys())
+    # movies for which the current user gave a rating
+    movies = Movie.query.filter(Movie.id.in_(movie_ids)).all()
     
     form = EditUserProfileForm()
     
@@ -240,7 +246,7 @@ def recommendations_page():
     if current_user.is_authenticated:
         print("Loading user-specific ratings for movies")
         user_id = current_user.id
-        user_ratings_dict = load_user_ratings(movie_ids, user_id)
+        user_ratings_dict = load_user_ratings(user_id, movie_ids)
         averages_dict, counts = load_all_ratings(movie_ids)
     else:
         print("Loading all ratings for movies")
