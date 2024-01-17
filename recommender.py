@@ -154,7 +154,7 @@ def movies_page():
         tags.setdefault(tag.movie_id, []).append(tag)
     
     data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
-    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+    movie_data = {m.movie_id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
 
 
     if current_user.is_authenticated:

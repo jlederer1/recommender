@@ -57,9 +57,9 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " links read")
                 
-                if count > 1000:
-                    db.session.rollback()
-                    break
+                #if count > 1000:
+                #    db.session.rollback()
+                #    break
         
         # read tags from csv
         with open('data/tags.csv', newline='', encoding='utf8') as csvfile:
@@ -86,9 +86,9 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " tags read")
                 
-                if count > 1000:
-                    db.session.rollback()
-                    break
+                #if count > 1000:
+                #    db.session.rollback()
+                #    break
                     
                     
         # read ratings (and corresponding users) from csv
@@ -130,9 +130,10 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " ratings read")
                 
-                if count > 1000:
-                    db.session.rollback()
-                    break
+                #if count > 1000:
+                #    db.session.rollback()
+                #    break
+        
         with open("data/movie_data.csv", newline='', encoding='utf8') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             count = 0
@@ -155,6 +156,6 @@ def check_and_read_data(db):
                 if count % 100 == 0:
                     print(count, " data read")
                 
-                if count > 1000:
-                    db.session.rollback()
-                    break
+                #if count > 1000:
+                #    db.session.rollback()
+                #    break
