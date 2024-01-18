@@ -8,8 +8,9 @@ from flask_paginate import Pagination, get_page_args, get_page_parameter
 
 from models import db, User, Movie, MovieGenre, Link, Tag, Rating, Data
 from read_data import check_and_read_data
-from sqlalchemy import func, text
+from sqlalchemy import func, or_
 import math
+import numpy as np
 
 from create_recommendations import recommend_movies
 
@@ -53,7 +54,28 @@ def initdb_command():
 @app.route('/')
 def home_page():
     # render home.html template
-    return render_template("home.html")
+
+    # get 4 random movies and their poster + one tagline
+    not_complete = True
+    while not_complete:
+        movies = Movie.query.order_by(func.random()).limit(4).all()
+        movie_ids = [m.id for m in movies]
+
+        data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
+        movie_data = {m.movie_id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+
+
+        bad_batch = False
+        for movie_id in movie_data:
+            if movie_data[movie_id]["tagline"] == "" or movie_data[movie_id]["poster"] == "":
+                bad_batch = True
+                break
+        if not bad_batch:
+            not_complete = False
+            
+    correct_guess = np.random.choice(movie_ids)
+
+    return render_template("home.html", movies=movies, movie_data=movie_data, correct_guess=correct_guess)
 
 def load_all_ratings(movie_ids=None): 
     if not movie_ids:   
@@ -136,7 +158,9 @@ def movies_page():
         query = db.session.query(Movie).join(subquery, Movie.id == subquery.c.id).order_by(subquery.c.weighted_rating.desc())
     
     if search_query:
-            query = query.filter(Movie.title.contains(search_query))
+            #query = query.filter(Movie.title.contains(search_query))
+            query = query.join(Data, Movie.id == Data.movie_id).filter(or_(Movie.title.contains(search_query), Data.overview.contains(search_query)))
+
 
     movies = query.paginate(page=page, per_page=per_page, error_out=False)
     pagination = Pagination(page=page, total=movies.total, record_name='movies', per_page=per_page)

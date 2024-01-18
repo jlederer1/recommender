@@ -48,9 +48,25 @@
         </div>
     </div>
     {% block menu %}
-    <div id="menu-div" class="with-margins">
-        <a href="/">{%trans%}Home page{%endtrans%}</a> <br/>
-    </div>
+        {% if call_or_get(current_user.is_authenticated) %}
+            <div id="menu-div" class="with-margins">
+                <a href="/">Home page</a> 
+                &nbsp; | &nbsp;
+                <a href={{ url_for('custom_user_profile') }}>Personal Page</a>
+                &nbsp; | &nbsp;
+                <a href={{ url_for('movies_page') }}>Movies</a>
+                &nbsp; | &nbsp;
+                <a href={{ url_for('user.logout') }}>Sign out</a>
+            </div>
+        {% else %}
+            <div id="menu-div" class="with-margins">
+                <a href="/">Home page</a> 
+                &nbsp; | &nbsp;
+                <a href={{ url_for('user.register') }}>Register</a>
+                &nbsp; | &nbsp;
+                <a href={{ url_for('user.login') }}>Sign in</a>
+            </div>
+        {% endif %}
     {% endblock %}
     <hr class="no-margins"/>
 
