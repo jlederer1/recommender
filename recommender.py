@@ -243,8 +243,8 @@ def custom_user_profile():
 def recommendations_page():
 
     #recommendations_page_wait()
-    import time
-    time.sleep(5)    
+    #import time
+    #time.sleep(5)    
     user_id = current_user.id
 
     if check_4_new_ratings():

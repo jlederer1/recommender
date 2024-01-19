@@ -139,7 +139,7 @@ def matrix_factorization():
     K = 5
     P = np.random.rand(num_users, K)
     Q = np.random.rand(num_movies, K)
-    steps = 100
+    steps = 200
     alpha = 0.0001
     beta = 0.02
     R_binary = R > 0
@@ -174,10 +174,16 @@ def get_user_recommendations(user_id):
     sorted_user_predictions = preds_df.iloc[user_row_number].sort_values(ascending=False)
 
     print(sorted_user_predictions.iloc[:10])
-    print(list(sorted_user_predictions.iloc[:10].index))
+    predictions = list(sorted_user_predictions.iloc[:10].index)
+    print(predictions)
     #print(sorted_user_predictions.iloc[:10])
 
-    return list(sorted_user_predictions.iloc[:10].index)
+    movies = Movie.query.all()
+    movie_preds = [movies[p].id for p in predictions]
+    print(movie_preds)
+
+
+    return movie_preds
 
 #check_4_new_ratings()
 #matrix_factorization()
