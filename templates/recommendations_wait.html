@@ -1,0 +1,55 @@
+{% extends "flask_user_layout.html" %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='ratings.js') }}"></script>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checked {
+        color: orange; 
+    }
+    .fa-star:focus {
+        outline: none;        /* Removes the default focus properties*/
+        color: orange;          
+        background: none;     
+        text-shadow: none;    
+    }
+
+    .center {
+        text-align: center;
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container">
+
+    <h2>Movie Recommendations</h2>
+
+    <div class="row center">
+
+        <img src="{{ url_for('static',filename='spongebob-hours-later-short.gif') }}">
+
+    <script>
+        $(document).ready(function() {
+            setTimeout(function() {
+                window.location.href = "/recommendations";
+            }, 5000);  // Delay for 5 seconds
+        });
+    </script>
+
+    </div>
+        
+    
+
+    
+    
+</div>
+
+{% endblock %}

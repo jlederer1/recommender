@@ -12,7 +12,7 @@ from sqlalchemy import func, or_
 import math
 import numpy as np
 
-from create_recommendations import recommend_movies
+from create_recommendations import recommend_movies, check_4_new_ratings, matrix_factorization, get_user_recommendations
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -241,10 +241,23 @@ def custom_user_profile():
 @app.route('/recommendations')
 @login_required  # User must be authenticated
 def recommendations_page():
+
+    #recommendations_page_wait()
+    import time
+    time.sleep(5)    
     user_id = current_user.id
 
-    already_rated, predictions = recommend_movies(app, user_id)
-    predictions = predictions["movie_id"]
+    if check_4_new_ratings():
+        print("New ratings found, so retraining the model")
+        matrix_factorization()
+    else:
+        print("No new ratings found, so using existing model")
+        # load csv file
+    predictions = get_user_recommendations(user_id)
+
+
+    #already_rated, predictions = recommend_movies(app, user_id)
+    #predictions = predictions["movie_id"]
     predictions = Movie.query.filter(Movie.id.in_(predictions))#.all()
 
     page = request.args.get(get_page_parameter(), type=int, default=1)
@@ -277,8 +290,15 @@ def recommendations_page():
         user_ratings_dict = {}
         averages_dict, counts = load_all_ratings(movie_ids)
 
+    
     return render_template("recommendations.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, movie_data=movie_data, pagination=pagination)
 
+
+@app.route('/recommendations_wait')
+@login_required  # User must be authenticated
+def recommendations_page_wait():
+    print("here")
+    return render_template("recommendations_wait.html")
 
 # Start development web server
 if __name__ == '__main__':
