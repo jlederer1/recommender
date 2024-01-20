@@ -36,7 +36,7 @@
 <body>
     {% block body %}
     <div id="header-div" class="clearfix with-margins">
-        <div class="pull-left"><a href="/"><h1 class="no-margins">{{ user_manager.USER_APP_NAME }}</h1></a></div>
+        <div class="pull-left"><a href={{ url_for('home_page') }}><h1 class="no-margins">{{ user_manager.USER_APP_NAME }}</h1></a></div>
         <div class="pull-right">
             {% if call_or_get(current_user.is_authenticated) %}
                 <a href="{{ url_for('custom_user_profile') }}">{{ current_user.username or current_user.email }}</a>
@@ -50,7 +50,7 @@
     {% block menu %}
         {% if call_or_get(current_user.is_authenticated) %}
             <div id="menu-div" class="with-margins">
-                <a href="/">Home page</a> 
+                <a href={{ url_for('home_page') }}>Home page</a> 
                 &nbsp; | &nbsp;
                 <a href={{ url_for('custom_user_profile') }}>Personal Page</a>
                 &nbsp; | &nbsp;
@@ -60,7 +60,7 @@
             </div>
         {% else %}
             <div id="menu-div" class="with-margins">
-                <a href="/">Home page</a> 
+                <a href={{ url_for('home_page') }}>Home page</a> 
                 &nbsp; | &nbsp;
                 <a href={{ url_for('user.register') }}>Register</a>
                 &nbsp; | &nbsp;
