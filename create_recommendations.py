@@ -101,7 +101,7 @@ user_manager = UserManager(app, db, User)  # initialize Flask-User management
 
 def check_4_new_ratings():
     newest_rating = Rating.query.order_by(Rating.id.desc()).first()
-    with open('persistent_data') as f:
+    with open('data/persistent_data') as f:
         data = f.readline()
         
     if int(data) == int(newest_rating.id):
@@ -111,7 +111,7 @@ def check_4_new_ratings():
         print('new ratings, retrain matrix factorization')
         # train matrix factorization
         # save new data to persistent_data
-        with open('persistent_data', 'w') as f:
+        with open('data/persistent_data', 'w') as f:
             f.write(str(newest_rating.id))
         return True
 
@@ -157,14 +157,14 @@ def matrix_factorization():
             break
     
     # save the factorized matrix as csv file
-    np.savetxt("P.csv", P, delimiter=",")
-    np.savetxt("Q.csv", Q, delimiter=",")
+    np.savetxt("data/P.csv", P, delimiter=",")
+    np.savetxt("data/Q.csv", Q, delimiter=",")
 
 
 def get_user_recommendations(user_id):
     # read data from csv file
-    P = np.loadtxt("P.csv", delimiter=",")
-    Q = np.loadtxt("Q.csv", delimiter=",")
+    P = np.loadtxt("data/P.csv", delimiter=",")
+    Q = np.loadtxt("data/Q.csv", delimiter=",")
     # get the predicted ratings
     all_user_predicted_ratings = np.dot(P, Q.T)
     # Convert the predicted ratings to a DataFrame

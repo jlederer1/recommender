@@ -31,6 +31,10 @@ class ConfigClass(object):
     USER_ENABLE_USERNAME = True  # Enable username authentication
     # USER_ENABLE_AUTH0 = True ### debug...
     USER_REQUIRE_RETYPE_PASSWORD = True  # Simplify register form
+    USER_AFTER_REGISTER_ENDPOINT = 'home_page'
+    USER_AFTER_CONFIRM_ENDPOINT = 'home_page'
+    USER_AFTER_LOGIN_ENDPOINT = 'home_page'
+    USER_AFTER_LOGOUT_ENDPOINT = 'home_page'
 
 # Create Flask app
 app = Flask(__name__)
@@ -295,7 +299,7 @@ def recommendations_page():
             weighted_averages_dict[m] = averages_dict[m] * counts[m]
         # get movies with highest weighted average rating
         predictions = sorted(weighted_averages_dict, key=weighted_averages_dict.get, reverse=True)[:10]    
-        
+
 
     else:
         if len(load_user_ratings(user_id)) == 0:
