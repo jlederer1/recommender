@@ -286,7 +286,16 @@ def recommendations_page():
         predictions = get_user_recommendations(random_user_id)
     
     elif choice == "popular":
-        pass
+        # get movies with highest average rating
+        print("Popular choice selected")
+        averages_dict, counts = load_all_ratings()
+        # multiply average rating by number of votes
+        weighted_averages_dict = {}
+        for m in averages_dict:
+            weighted_averages_dict[m] = averages_dict[m] * counts[m]
+        # get movies with highest weighted average rating
+        predictions = sorted(weighted_averages_dict, key=weighted_averages_dict.get, reverse=True)[:10]    
+        
 
     else:
         if len(load_user_ratings(user_id)) == 0:
