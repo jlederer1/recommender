@@ -223,6 +223,25 @@ def submit_ratings():
     print("received ratings")
     return 'Success', 200
 
+@app.route('/delete_ratings', methods=['POST'])
+def delete_ratings():
+    ratings = request.json['delete_ratings']
+    # Add logic to insert ratings into the database
+    for r in ratings: 
+        user_id = r['user_id']
+        movie_id = r['movie_id']
+
+        row = Rating.query.filter(Rating.user_id==user_id, Rating.movie_id==movie_id).all()
+        if len(row) > 0:
+            print(row[0])
+            db.session.delete(row[0])
+        
+
+    db.session.commit()
+    print("deleted rating")
+    return 'Success', 200
+
+
 @app.route('/custom-user-profile')
 def custom_user_profile():
     user_id = current_user.id
@@ -247,13 +266,41 @@ def recommendations_page():
     #time.sleep(5)    
     user_id = current_user.id
 
-    if check_4_new_ratings():
-        print("New ratings found, so retraining the model")
-        matrix_factorization()
+    
+
+    choice = request.args.get('choice', default=None, type=str)
+
+    if choice == "random":
+        print("Random choice selected")
+        # get number of all users
+        num_users = db.session.query(func.count(User.id)).scalar()
+        print("Number of users: ", num_users)
+        bad_choice = True
+        while bad_choice:
+            random_user_id = np.random.randint(1, num_users)
+            rates = load_user_ratings(random_user_id)
+
+            if (random_user_id != user_id) and len(rates) > 0:
+                bad_choice = False
+
+        predictions = get_user_recommendations(random_user_id)
+    
+    elif choice == "popular":
+        pass
+
     else:
-        print("No new ratings found, so using existing model")
-        # load csv file
-    predictions = get_user_recommendations(user_id)
+        if len(load_user_ratings(user_id)) == 0:
+            print("No ratings found, so give choices to user")
+            return render_template("recommendations_choices.html")
+            
+        if check_4_new_ratings():
+            print("New ratings found, so retraining the model")
+            matrix_factorization()
+        else:
+            print("No new ratings found, so using existing model")
+            # load csv file
+        predictions = get_user_recommendations(user_id)
+
 
 
     #already_rated, predictions = recommend_movies(app, user_id)

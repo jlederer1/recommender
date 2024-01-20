@@ -28,14 +28,20 @@
         }
         /* Adjust the width of the first and second columns */
         td:first-child {
-            width: 50%;  /* Adjust as needed */
+            width: 40%;  /* Adjust as needed */
         }
         td:nth-child(2) {
+            text-align: center;
             width: 40%;  /* Adjust as needed */
         }
         td:nth-child(3) {
+            
             width: 10%;  /* Adjust as needed */
         }
+        td:nth-child(4) {
+            width: 10%;  /* Adjust as needed */
+        }
+        
         .rating-count {
             text-align: right;
             padding: 0px;
@@ -48,7 +54,7 @@
 {% endblock %}
 
 {% block content %}
-    {{ super() }}  <!-- This includes the content from the parent template's 'content' block -->
+   <!--  {{ super() }}  <!-- This includes the content from the parent template's 'content' block -->
     <div>
         <h3>User Ratings</h3>
         <div style="height: 300px; /* Adjust as needed */
@@ -83,14 +89,25 @@
                 </td>
                 <!-- Display number of ratings -->
                 <td class="rating-count">({{ counts[movie.id] }})</td>
+
+                <td class="rating-count">
+                    <a href="#" onclick="event.preventDefault(); deleteRating({{ current_user.id }}, {{ movie.id }});">
+                        <span class="fa fa-trash"></span>
+                    </a>
+                </td>
             </tr>
         {% endfor %}
         </table>
         </div>
 
     <!-- Button for generating recommendations -->
-    <a href="{{ url_for('recommendations_page_wait') }}">
-        <button type="button" class="btn btn-primary generate-button">Generate Recommendations</button>
-    </a>
-
+    {% if movies|length == 0 %}
+        <a href="{{ url_for('recommendations_page') }}">
+            <button type="button" class="btn btn-primary generate-button">Generate Recommendations</button>
+        </a>
+    {% else %}
+        <a href="{{ url_for('recommendations_page_wait') }}">
+            <button type="button" class="btn btn-primary generate-button">Generate Recommendations</button>
+        </a>
+    {% endif %}
 {% endblock %}

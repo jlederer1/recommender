@@ -32,3 +32,16 @@ function addRating(user_id, movie_id, score, avg_rating, elem_id) {
 
       }
 }
+
+function deleteRating(user_id, movie_id) {
+    let delete_ratings = {
+        user_id: user_id,
+        movie_id: movie_id
+    };
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/delete_ratings", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify({delete_ratings: [delete_ratings] }));
+
+}
