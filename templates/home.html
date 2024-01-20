@@ -21,6 +21,45 @@
 
     <div class="container">
 
+        {% if current_user.is_authenticated %}
+            <h2>Welcome, {{ current_user.username }}!</h2>
+            <p>
+                You can browse the movies or get recommendations by using the navigation bar in the top left corner.
+            </p>
+            <p>    
+                To get recommendations, you need to visit your profile page and generate them.
+            </p>
+            <p>
+                If you not have rated any movies, you can still get recommendations by choosing the options after generating recommendations.
+            </p>
+            <p>    
+                To get individual recommendations, you need to rate at least 1 movie.
+            </p>
+            <p>    
+                In the meantime, you can also play the guessing game down below.
+            </p>
+            <p>
+                Have fun!
+            </p>
+        {% else %}
+            <h2>Welcome!</h2>
+            <p>
+                You need to be logged in to browse the movies or get recommendations.
+            </p>
+            <p>
+                Please sign in or register.
+            </p>
+            <p>
+                In the meantime, you can play the guessing game down below.
+            </p>
+            <p>
+                Have fun!
+            </p>
+            <br>
+            <br>
+        {% endif %}
+
+
         <div class="center">
             <br>
             <br>
