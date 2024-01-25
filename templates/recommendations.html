@@ -9,6 +9,13 @@
     .checked {
         color: orange; 
     }
+    .checked_average {
+        color: orange; 
+        border-bottom: 2px solid gold;
+    }
+    .average {  
+        border-bottom: 2px solid gold;
+    }
     .fa-star:focus {
         outline: none;        /* Removes the default focus properties*/
         color: orange;          
@@ -16,21 +23,19 @@
         text-shadow: none;    
     }
 
+    .center {
+        text-align: center;
+    }
+
 </style>
 
 {% endblock %}
 
-{% block menu %}
-    <div id="menu-div" class="with-margins">
-        <a href="/">{%trans%}Home page{%endtrans%}</a> <br/>
-        <a href="{{ url_for('movies_page') }}">Movies</a> <br/>
-    </div>
-{% endblock %}
 
 {% block content %}
 
 <div class="container">
-    <h2>Movie Recommendations</h2>
+    <h2>Movies</h2>
 
     {% for m in movies %}
         <div class="panel panel-default">
@@ -89,16 +94,27 @@
                 <!-- Display stars based on average rating -->
                 <div class="panel-footer">Rate:
                     {% for i in range(1, 6) %}
-                        {% if user_rating.get(m.id) and user_rating[m.id][0].rating >= i %}
-                            <a class="checked" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                        
+                        {% if user_rating.get(m.id) and user_rating[m.id][0].rating >= i and average_rating[m.id] == i %}
+                            <a class="checked_average" href="#" onclick="event.preventDefault(); addRating('{{ url_for('submit_ratings') }}', {{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                            
+                        {% elif user_rating.get(m.id) and user_rating[m.id][0].rating >= i %}
+                            <a class="checked" href="#" onclick="event.preventDefault(); addRating('{{ url_for('submit_ratings') }}', {{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                                                    
+                        {% elif average_rating[m.id] == i %}
+                            <a class="average" href="#" onclick="event.preventDefault(); addRating('{{ url_for('submit_ratings') }}', {{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                                                    
                         {% else %}
-                            <a class="" href="#" onclick="event.preventDefault(); addRating({{ current_user.id }}, {{ m.id }}, {{ i }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                            <a class="" href="#" onclick="event.preventDefault(); addRating('{{ url_for('submit_ratings') }}', {{ current_user.id }}, {{ m.id }}, {{ i }}, {{ average_rating[m.id] }}, this.id);" id='{{ m.id }}_{{ i }}'>
+                            
                         {% endif %}
+                        
                         <span class="fa fa-star"></span>     
+                        
                         </a>
                     {% endfor %}
                     Stars
-                </div>   
+                </div>    
             </div>
         </div>
     {% endfor %}

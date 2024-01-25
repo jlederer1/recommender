@@ -1,0 +1,63 @@
+{% extends "flask_user_layout.html" %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='ratings.js') }}"></script>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checked {
+        color: orange; 
+    }
+    .fa-star:focus {
+        outline: none;        /* Removes the default focus properties*/
+        color: orange;          
+        background: none;     
+        text-shadow: none;    
+    }
+
+    .center {
+        text-align: center;
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 center">
+            <h2>Movie Recommendations</h2>
+            <p>
+                Oops looks like you dont have any ratings yet, but no worries! 
+                You can still get recommendations by clicking on of the buttons below.
+            </p>
+            <br>
+            <br>
+        </div>
+    </div>
+    
+
+    
+
+    <div class="row">
+        <div class="col-md-6 center">
+            <a href="{{ url_for('recommendations_page', choice='popular') }}" class="btn btn-primary btn-lg">Popular Movies</a>
+        </div>
+        <div class="col-md-6 center">
+            <a href="{{ url_for('recommendations_page', choice='random') }}" class="btn btn-primary btn-lg">Random User</a>
+    </div>
+
+    </div>
+        
+    
+
+    
+    
+</div>
+
+{% endblock %}

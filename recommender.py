@@ -8,10 +8,11 @@ from flask_paginate import Pagination, get_page_args, get_page_parameter
 
 from models import db, User, Movie, MovieGenre, Link, Tag, Rating, Data
 from read_data import check_and_read_data
-from sqlalchemy import func, text
+from sqlalchemy import func, or_
 import math
+import numpy as np
 
-from create_recommendations import recommend_movies
+from create_recommendations import recommend_movies, check_4_new_ratings, matrix_factorization, get_user_recommendations
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -30,6 +31,10 @@ class ConfigClass(object):
     USER_ENABLE_USERNAME = True  # Enable username authentication
     # USER_ENABLE_AUTH0 = True ### debug...
     USER_REQUIRE_RETYPE_PASSWORD = True  # Simplify register form
+    USER_AFTER_REGISTER_ENDPOINT = 'home_page'
+    USER_AFTER_CONFIRM_ENDPOINT = 'home_page'
+    USER_AFTER_LOGIN_ENDPOINT = 'home_page'
+    USER_AFTER_LOGOUT_ENDPOINT = 'home_page'
 
 # Create Flask app
 app = Flask(__name__)
@@ -53,7 +58,28 @@ def initdb_command():
 @app.route('/')
 def home_page():
     # render home.html template
-    return render_template("home.html")
+
+    # get 4 random movies and their poster + one tagline
+    not_complete = True
+    while not_complete:
+        movies = Movie.query.order_by(func.random()).limit(4).all()
+        movie_ids = [m.id for m in movies]
+
+        data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
+        movie_data = {m.movie_id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+
+
+        bad_batch = False
+        for movie_id in movie_data:
+            if movie_data[movie_id]["tagline"] == "" or movie_data[movie_id]["poster"] == "":
+                bad_batch = True
+                break
+        if not bad_batch:
+            not_complete = False
+            
+    correct_guess = np.random.choice(movie_ids)
+
+    return render_template("home.html", movies=movies, movie_data=movie_data, correct_guess=correct_guess)
 
 def load_all_ratings(movie_ids=None): 
     if not movie_ids:   
@@ -136,7 +162,9 @@ def movies_page():
         query = db.session.query(Movie).join(subquery, Movie.id == subquery.c.id).order_by(subquery.c.weighted_rating.desc())
     
     if search_query:
-            query = query.filter(Movie.title.contains(search_query))
+            #query = query.filter(Movie.title.contains(search_query))
+            query = query.join(Data, Movie.id == Data.movie_id).filter(or_(Movie.title.contains(search_query), Data.overview.contains(search_query)))
+
 
     movies = query.paginate(page=page, per_page=per_page, error_out=False)
     pagination = Pagination(page=page, total=movies.total, record_name='movies', per_page=per_page)
@@ -158,7 +186,7 @@ def movies_page():
         tags.setdefault(tag.movie_id, []).append(tag)
     
     data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
-    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+    movie_data = {m.movie_id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
 
 
     if current_user.is_authenticated:
@@ -199,6 +227,25 @@ def submit_ratings():
     print("received ratings")
     return 'Success', 200
 
+@app.route('/delete_ratings', methods=['POST'])
+def delete_ratings():
+    ratings = request.json['delete_ratings']
+    # Add logic to insert ratings into the database
+    for r in ratings: 
+        user_id = r['user_id']
+        movie_id = r['movie_id']
+
+        row = Rating.query.filter(Rating.user_id==user_id, Rating.movie_id==movie_id).all()
+        if len(row) > 0:
+            print(row[0])
+            db.session.delete(row[0])
+        
+
+    db.session.commit()
+    print("deleted rating")
+    return 'Success', 200
+
+
 @app.route('/custom-user-profile')
 def custom_user_profile():
     user_id = current_user.id
@@ -217,10 +264,60 @@ def custom_user_profile():
 @app.route('/recommendations')
 @login_required  # User must be authenticated
 def recommendations_page():
+
+    #recommendations_page_wait()
+    #import time
+    #time.sleep(5)    
     user_id = current_user.id
 
-    already_rated, predictions = recommend_movies(app, user_id)
-    predictions = predictions["movie_id"]
+    
+
+    choice = request.args.get('choice', default=None, type=str)
+
+    if choice == "random":
+        print("Random choice selected")
+        # get number of all users
+        num_users = db.session.query(func.count(User.id)).scalar()
+        print("Number of users: ", num_users)
+        bad_choice = True
+        while bad_choice:
+            random_user_id = np.random.randint(1, num_users)
+            rates = load_user_ratings(random_user_id)
+
+            if (random_user_id != user_id) and len(rates) > 0:
+                bad_choice = False
+
+        predictions = get_user_recommendations(random_user_id)
+    
+    elif choice == "popular":
+        # get movies with highest average rating
+        print("Popular choice selected")
+        averages_dict, counts = load_all_ratings()
+        # multiply average rating by number of votes
+        weighted_averages_dict = {}
+        for m in averages_dict:
+            weighted_averages_dict[m] = averages_dict[m] * counts[m]
+        # get movies with highest weighted average rating
+        predictions = sorted(weighted_averages_dict, key=weighted_averages_dict.get, reverse=True)[:10]    
+
+
+    else:
+        if len(load_user_ratings(user_id)) == 0:
+            print("No ratings found, so give choices to user")
+            return render_template("recommendations_choices.html")
+            
+        if check_4_new_ratings():
+            print("New ratings found, so retraining the model")
+            matrix_factorization()
+        else:
+            print("No new ratings found, so using existing model")
+            # load csv file
+        predictions = get_user_recommendations(user_id)
+
+
+
+    #already_rated, predictions = recommend_movies(app, user_id)
+    #predictions = predictions["movie_id"]
     predictions = Movie.query.filter(Movie.id.in_(predictions))#.all()
 
     page = request.args.get(get_page_parameter(), type=int, default=1)
@@ -240,7 +337,7 @@ def recommendations_page():
         tags.setdefault(tag.movie_id, []).append(tag)
     
     data = Data.query.filter(Data.movie_id.in_(movie_ids)).all()
-    movie_data = {m.id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
+    movie_data = {m.movie_id: {'poster': m.poster, 'tagline': m.tagline, 'overview': m.overview} for m in data}
 
 
     if current_user.is_authenticated:
@@ -253,8 +350,15 @@ def recommendations_page():
         user_ratings_dict = {}
         averages_dict, counts = load_all_ratings(movie_ids)
 
+    
     return render_template("recommendations.html", movies=movies, movie_links=links, movie_tags=tags, user_rating=user_ratings_dict, average_rating=averages_dict, votes=counts, movie_data=movie_data, pagination=pagination)
 
+
+@app.route('/recommendations_wait')
+@login_required  # User must be authenticated
+def recommendations_page_wait():
+    print("here")
+    return render_template("recommendations_wait.html")
 
 # Start development web server
 if __name__ == '__main__':
