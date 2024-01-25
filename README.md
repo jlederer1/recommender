@@ -50,15 +50,15 @@ Contains the Movie Lens dataset, a description and the embeddings for Matrix Fac
 
 Homepage: 
 <br>
-<img src="static/home_page.jpeg.png" >
+<img src="static/home_page.jpeg" >
 <br>
 
 User profile: 
 <br>
-<img src="static/user_ratings.png" >
+<img src="static/user_ratings.jpeg" >
 <br>
 
 Recommendations page: 
 <br>
-<img src="static/recommendations.png" >
+<img src="static/recommendations.jpeg" >
 <br>
