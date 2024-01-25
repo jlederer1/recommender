@@ -10,8 +10,9 @@ This is a simple web application for users to sign up, rate movies and generate 
 	"flask --app recommender.py initdb"	
 4. start web application
 	* manually by
-		"python website.py"
+		"flask --app recommender.py run"
 	* or make use of website.wsgi
+		(avoid Firefox, Safari browser works best)
 
 ## recommender.py
 This file handles configuration, launching and initializing the flask app. 
@@ -41,25 +42,23 @@ Contains all views as .html used by recommender.py.
 ## /static
 Contains javascript functions and images
 
+## /data 
+Contains the Movie Lens dataset, a description and the embeddings for Matrix Factorisation
 
-
-### Screenshots of running application (todo)
+### Screenshots of running application 
 <br>
 
-Image 1 : 
+Homepage: 
 <br>
-<img src="*.png" >
-<br>
-
-Image 2: 
-<br>
-<img src="**.png" >
+<img src="static/home_page.jpeg.png" >
 <br>
 
+User profile: 
+<br>
+<img src="static/user_ratings.png" >
+<br>
 
-
-
-### Task Dashboard: 
-...
-
-
+Recommendations page: 
+<br>
+<img src="static/recommendations.png" >
+<br>
